@@ -59,6 +59,26 @@ const Home = () => {
             </Link>
           </div>
 
+          {/* Calendar Card */}
+          <div className="col">
+            <Link to="/calendar" className="card text-center text-white text-decoration-none" style={{ backgroundColor: 'rgba(0, 52, 89, 0.6)', border: 'none' }} state={{ email }}>
+              <div className="card-body d-flex flex-column justify-content-center align-items-center">
+                <IoMdSettings className="fs-1 mb-4" />
+                <h5 className="card-title">Takvim</h5>
+              </div>
+            </Link>
+          </div>
+
+          {/* AI Assistant Card */}
+          <div className="col">
+            <Link to="/ai-assistant" className="card text-center text-white text-decoration-none" style={{ backgroundColor: 'rgba(0, 52, 89, 0.6)', border: 'none' }} state={{ email }}>
+              <div className="card-body d-flex flex-column justify-content-center align-items-center">
+                <IoMdSettings className="fs-1 mb-4" />
+                <h5 className="card-title">AI Asistan</h5>
+              </div>
+            </Link>
+          </div>
+
           {/* Admin Card (Sadece hilmiy@gmail.com için gösterilecek) */}
           {email === 'hilmiy@gmail.com' && (
   <div className="col">

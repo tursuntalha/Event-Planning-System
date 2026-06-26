@@ -1,16 +1,22 @@
 const mongoose = require('mongoose');
 
-// Etkinlik Schema
 const eventSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  description: { type: String, default: '' },
   date: { type: Date, required: true },
+  endDate: { type: Date },
   location: { type: String, required: true },
   type: { type: String, required: true },
+  tags: { type: [String], default: [] },
   participants: [{ type: String }],
-  createdBy: { type: String, required: true },  // Kurucunun emaili burada olacak
-  isActive: { type: Boolean, default: false }  // Aktiflik durumu, varsayılan olarak true
-});
+  rsvps: [{
+    email: { type: String },
+    status: { type: String, enum: ['accepted', 'declined', 'maybe'], default: 'accepted' }
+  }],
+  createdBy: { type: String, required: true },
+  createdById: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  isActive: { type: Boolean, default: true },
+  maxAttendees: { type: Number, default: 0 }
+}, { timestamps: true });
 
-const Event = mongoose.model('Event', eventSchema);
-
-module.exports = Event;
+module.exports = mongoose.model('Event', eventSchema);

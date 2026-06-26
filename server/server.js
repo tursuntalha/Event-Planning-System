@@ -1,58 +1,71 @@
 const http = require("http");
 const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 const socketIo = require("socket.io");
+require('dotenv').config();
+
+const authRoutes = require('./routes/auth');
+const eventRoutes = require('./routes/events');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const server = http.createServer(app);
+
 const io = socketIo(server, {
-  cors: {
-    origin: '*', 
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type'],
-    credentials: true,
-  },
+  cors: { origin: '*', methods: ['GET', 'POST'], credentials: true }
 });
 
+app.use(cors({ origin: '*', credentials: true }));
+app.use(express.json({ limit: '10mb' }));
+
+mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/yazlab")
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB error:", err));
+
+app.use('/api/auth', authRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/ai', aiRoutes);
+
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
 const activeUsers = [];
-let messages = []; // Tüm mesajları saklamak için dizi
+let messages = [];
 
 io.on("connection", (socket) => {
-  console.log("Bir kullanıcı bağlandı:", socket.id);
+  console.log("User connected:", socket.id);
 
-  // Kullanıcı aktif olduğunda
   socket.on("userActive", (userName) => {
     const user = { id: socket.id, userName };
     activeUsers.push(user);
-
-    // Tüm kullanıcılara aktif kullanıcı listesini gönder
     io.emit("activeUsers", activeUsers);
-
-    // Bağlanan kullanıcıya geçmiş mesajları gönder
-    socket.emit("previousMessages", messages); // Geçmiş mesajları yolla
+    socket.emit("previousMessages", messages);
   });
 
-  // Mesaj gönderildiğinde
   socket.on("sendMessage", (data) => {
-    console.log("Yeni mesaj alındı ve yayımlanıyor:", data);
-    messages.push(data); // Mesajı kaydediyoruz
-    // Mesajı **tüm bağlı kullanıcılara** gönderiyoruz
-    io.emit("receiveMessage", data);  // **Tüm kullanıcılara** mesajı yayınlıyoruz
+    messages.push(data);
+    io.emit("receiveMessage", data);
   });
 
-  // Kullanıcı bağlantısını kopardığında
-  socket.on("disconnect", () => {
-    console.log("Bir kullanıcı ayrıldı:", socket.id);
+  socket.on("join-event-room", (eventId) => {
+    socket.join(`event:${eventId}`);
+    socket.eventRoom = eventId;
+  });
 
-    // Kullanıcıyı aktif kullanıcı listesinden çıkarıyoruz
-    const index = activeUsers.findIndex((user) => user.id === socket.id);
-    if (index !== -1) {
-      activeUsers.splice(index, 1);
-      io.emit("activeUsers", activeUsers); // Güncellenmiş aktif kullanıcı listesi gönder
+  socket.on("event-updated", (eventId) => {
+    io.to(`event:${eventId}`).emit("event-refresh", { eventId });
+  });
+
+  socket.on("disconnect", () => {
+    const idx = activeUsers.findIndex(u => u.id === socket.id);
+    if (idx !== -1) {
+      activeUsers.splice(idx, 1);
+      io.emit("activeUsers", activeUsers);
     }
   });
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Sunucu ${PORT} portunda çalışıyor.`);
+  console.log(`EventAI server running on port ${PORT}`);
 });

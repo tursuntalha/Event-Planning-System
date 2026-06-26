@@ -137,8 +137,8 @@ ollama serve
 
 ## Roadmap
 
-- [ ] **Phase 1** — Event CRUD + MongoDB schema + JWT auth
-- [ ] **Phase 2** — Real-time updates via Socket.io + calendar view (FullCalendar.js)
-- [ ] **Phase 3** — RSVP system + email notifications (Nodemailer)
-- [ ] **Phase 4** — AI scheduling assistant + description generator (Ollama qwen2.5)
-- [ ] **Phase 5** — Conflict detector + role-based access + mobile-responsive polish
+- [x] **Phase 1** — Event CRUD + MongoDB schema + JWT auth
+- [x] **Phase 2** — Real-time updates via Socket.io + calendar view (FullCalendar.js)
+- [x] **Phase 3** — RSVP system + email notifications (Nodemailer)
+- [x] **Phase 4** — AI scheduling assistant + description generator (Ollama qwen2.5)
+- [x] **Phase 5** — Conflict detector + role-based access + mobile-responsive polish
