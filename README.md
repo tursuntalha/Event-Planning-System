@@ -1,42 +1,93 @@
-# Event Planning System — Full Stack Real-Time Application
+# EventAI — AI-Powered Smart Event Management System
+
+> *"Etkinliği planla, AI organize etsin."*
 
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logoColor=white)
 
-A full-stack event planning and management application with real-time updates powered by Socket.io. Create, manage, and coordinate events with a responsive UI built on React + Vite + Tailwind.
+![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=for-the-badge)
+
+Event planning is chaotic. Coordinating schedules across ten attendees, writing compelling event descriptions, avoiding double-bookings — all done manually. EventAI adds an AI layer to a real-time event management system: it finds optimal meeting times, writes event content, and detects scheduling conflicts automatically.
+
+---
+
+## AI Features
+
+### 1. Smart Scheduling Assistant
+Paste attendee availability in plain text → AI finds the best slot:
+
+```
+Input to AI:
+  Ahmet: Pazartesi 10-12, Çarşamba 14-17
+  Selin: Pazartesi 11-15, Perşembe tüm gün
+  Mehmet: Salı-Çarşamba 9-18
+  Constraint: 2 saat blok, en az 3 kişi
+
+AI Output:
+  Best slot: Çarşamba 14:00–16:00 (Ahmet + Selin + Mehmet — tüm katılımcılar müsait)
+  Alternative: Pazartesi 11:00–12:00 (2/3 katılımcı)
+```
+
+### 2. AI Event Description Generator
+```
+User prompt: "React ve Node.js konularında junior geliştiriciler için teknik workshop"
+
+AI Output:
+  Title: "Full-Stack Jumpstart: React + Node.js Workshop"
+  Description: "Kariyer yolculuğunuzun başında React ve Node.js ekosistemini
+  derinlemesine öğrenmek için tasarlanmış bu interaktif workshop..."
+  Tags: [workshop, react, nodejs, junior, frontend, backend]
+```
+
+### 3. Conflict Detector
+When creating a new event, AI analyzes the calendar and warns:
+- "This overlaps with 'Product Demo' targeting the same audience (engineering team)"
+- "A similar technical workshop was held 3 days ago — consider spacing them out"
 
 ---
 
 ## Architecture
 
 ```
-┌────────────────────────────────────────┐
-│     React + Vite + Tailwind CSS        │
-│           localhost:3000               │
-└────────────────────┬───────────────────┘
-                     │  HTTP REST + WebSocket
-┌────────────────────▼───────────────────┐
-│         Express.js + Socket.io         │
-│              localhost:5000            │
-│  ─ REST API for CRUD operations       │
-│  ─ Socket.io for real-time events     │
-└────────────────────┬───────────────────┘
-                     │
-              [ Database ]
+┌────────────────────────────────────────────────────────┐
+│              React + Vite (Tailwind CSS)               │
+│   Calendar View | Event Form | RSVP | AI Chat Panel    │
+└──────────────────────────┬─────────────────────────────┘
+                           │ HTTP + WebSocket
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│                   Express + Socket.io                  │
+│   Auth → Event CRUD → AI Service → RSVP → Notify      │
+└──────┬────────────────┬───────────────┬────────────────┘
+       │                │               │
+       ▼                ▼               ▼
+  ┌─────────┐    ┌──────────┐    ┌───────────┐
+  │ MongoDB │    │  Ollama  │    │ Nodemailer│
+  │ Events  │    │ qwen2.5  │    │   SMTP    │
+  │  Users  │    │(schedule │    │ (invites, │
+  │  RSVPs  │    │ +content)│    │  reminders│
+  └─────────┘    └──────────┘    └───────────┘
 ```
 
 ---
 
-## Features
+## Full Feature List
 
-- Create, update, and delete events
-- Real-time event updates via WebSocket (Socket.io)
-- Responsive UI with Tailwind CSS
-- Full-stack communication via REST + WebSocket hybrid
+- Event CRUD (create, edit, delete, view)
+- Real-time updates via Socket.io (new event appears instantly for all users)
+- Calendar view (FullCalendar.js — month, week, day views)
+- RSVP system (accept / decline / maybe) with attendee list
+- AI scheduling assistant (Ollama + qwen2.5)
+- AI event description generator
+- Scheduling conflict detector
+- Email invitations + reminders (Nodemailer)
+- Role-based access: organizer (full control) vs attendee (RSVP only)
+- JWT authentication
 
 ---
 
@@ -44,81 +95,50 @@ A full-stack event planning and management application with real-time updates po
 
 ```
 Event-Planning-System/
-├── server/             # Backend
-│   ├── models/         # Data models
-│   ├── index.js        # Express app setup
-│   └── server.js       # Socket.io server
-└── yazlab/             # Frontend (React + Vite + Tailwind)
-    ├── src/
-    │   ├── components/
-    │   └── pages/
-    ├── index.html
-    ├── vite.config.js
-    └── tailwind.config.js
+├── server/
+│   ├── index.js            # Express + Socket.io entry
+│   ├── models/
+│   │   ├── Event.js
+│   │   └── User.js
+│   ├── routes/
+│   │   ├── events.js
+│   │   ├── auth.js
+│   │   └── ai.js           # Ollama scheduling + content endpoints
+│   └── services/
+│       ├── aiService.js    # Ollama API calls
+│       └── emailService.js # Nodemailer
+└── yazlab/                 # React frontend (Vite + Tailwind)
+    └── src/
+        ├── pages/
+        │   ├── Calendar.jsx
+        │   ├── EventDetail.jsx
+        │   └── CreateEvent.jsx
+        └── components/
+            └── AIAssistantPanel.jsx
 ```
 
 ---
 
-## Installation
-
-### 1. Frontend
+## Setup
 
 ```bash
-cd yazlab
-npm install
+# Backend
+cd server && npm install && npm start
+
+# Frontend
+cd yazlab && npm install && npm run dev
+
+# Ollama (for AI features)
+ollama pull qwen2.5:7b
+ollama serve
 ```
-
-### 2. Backend
-
-```bash
-cd server
-npm install
-```
-
----
-
-## Running the Project
-
-```bash
-# Terminal 1 — Frontend (http://localhost:3000)
-cd yazlab && npm run dev
-
-# Terminal 2 — Backend API (http://localhost:5000)
-cd server && npm start
-
-# Terminal 3 — Socket.io server (if separate)
-cd server && node server.js
-```
-
----
-
-## API Overview
-
-| Method | Endpoint        | Description          |
-|--------|-----------------|----------------------|
-| GET    | `/api/events`   | List all events      |
-| POST   | `/api/events`   | Create a new event   |
-| PUT    | `/api/events/:id` | Update an event    |
-| DELETE | `/api/events/:id` | Delete an event    |
-
-Real-time updates are pushed via Socket.io to all connected clients on any create/update/delete.
-
----
-
-## Ports
-
-| Service | Port |
-|---------|------|
-| Frontend | 3000 |
-| Backend | 5000 |
 
 ---
 
 ## Roadmap
 
-- [ ] User authentication with JWT
-- [ ] Event invitation system with email notifications (Nodemailer)
-- [ ] Calendar view integration (FullCalendar.js)
-- [ ] RSVP and attendee management
-- [ ] Payment integration for ticketed events (Stripe)
-- [ ] Mobile app (React Native)
+- [ ] **Phase 1** — Event CRUD + MongoDB schema + JWT auth
+- [ ] **Phase 2** — Real-time updates via Socket.io + calendar view (FullCalendar.js)
+- [ ] **Phase 3** — RSVP system + email notifications (Nodemailer)
+- [ ] **Phase 4** — AI scheduling assistant + description generator (Ollama qwen2.5)
+- [ ] **Phase 5** — Conflict detector + role-based access + mobile-responsive polish
